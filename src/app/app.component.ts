@@ -25,6 +25,7 @@ export class AppComponent {
   public gameStarted = false;
   public newBestScore = false;
   public best_score = this.bestScoreService.retrieve();
+  public respawn_count = 1;
 
   private snake = {
     direction: CONTROLS.LEFT,
@@ -37,6 +38,11 @@ export class AppComponent {
   };
 
   private fruit = {
+    x: -1,
+    y: -1
+  };
+
+  private ultimatefruit = {
     x: -1,
     y: -1
   };
@@ -70,6 +76,8 @@ export class AppComponent {
       return COLORS.BODY;
     } else if (this.default_mode === 'obstacles' && this.checkObstacles(row, col)) {
       return COLORS.OBSTACLE;
+    } else if (this.ultimatefruit.x === row && this.ultimatefruit.y === col) {
+      return COLORS.ULTIMATEFRUIT;
     }
 
     return COLORS.BOARD;
@@ -94,6 +102,9 @@ export class AppComponent {
       return this.gameOver();
     } else if (this.fruitCollision(newHead)) {
       this.eatFruit();
+    }
+      else if (this.UltimatefruitCollision(newHead)) {
+      this.eatUltimateFruit();
     }
 
     let oldTail = this.snake.parts.pop();
@@ -181,6 +192,10 @@ export class AppComponent {
     return part.x === this.fruit.x && part.y === this.fruit.y;
   }
 
+  UltimatefruitCollision(part: any): boolean {
+    return part.x === this.ultimatefruit.x && part.y === this.ultimatefruit.y;
+  }
+
   resetFruit(): void {
     let x = this.randomNumber();
     let y = this.randomNumber();
@@ -208,10 +223,48 @@ export class AppComponent {
     }
   }
 
+  resetUltimateFruit(): void {
+    let x = this.randomNumber();
+    let y = this.randomNumber();
+
+    if (this.board[y][x] === true || this.checkObstacles(x, y) ) {
+      return this.resetUltimateFruit();
+    }
+
+    this.ultimatefruit = {
+      x: x,
+      y: y
+    };
+  }
+
+  eatUltimateFruit(): void {
+    this.score += 5;
+
+    let tail = Object.assign({}, this.snake.parts[this.snake.parts.length - 1]);
+
+    if(this.snake.parts.length > 1){
+      this.snake.parts.splice(this.snake.parts.length - 1);
+      this.setBoard();
+    }
+    //this.snake.parts.push(tail);
+    
+    
+    this.resetUltimateFruit();
+
+    if (this.score % 5 === 0) {
+      this.interval -= 15;
+    }
+  }
+
   gameOver(): void {
     this.isGameOver = true;
     this.gameStarted = false;
     let me = this;
+
+    if(this.respawn_count > 0){
+      this.respawn_count --;
+      this.newGame(this.default_mode);
+    }
 
     if (this.score > this.best_score) {
       this.bestScoreService.store(this.score);
@@ -259,7 +312,7 @@ export class AppComponent {
       parts: []
     };
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       this.snake.parts.push({ x: 8 + i, y: 8 });
     }
 
@@ -271,7 +324,12 @@ export class AppComponent {
       } while (j++ < 9);
     }
 
+    if(this.respawn_count == 0){
+      this.respawn_count = 2;
+    }
+
     this.resetFruit();
+    this.resetUltimateFruit();
     this.updatePositions();
   }
 }

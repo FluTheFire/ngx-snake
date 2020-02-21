@@ -10,6 +10,7 @@ export const CONTROLS = {
 export const COLORS = {
   GAME_OVER: '#D24D57',
   FRUIT: '#EC644B',
+  ULTIMATEFRUIT: '#383522',
   HEAD: '#336E7B',
   BODY: '#C8F7C5',
   BOARD: '#86B5BD',
